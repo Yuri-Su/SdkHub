@@ -2,7 +2,6 @@ package com.yuchang.sdkhub.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
  * SdkHub 配置属性类
@@ -19,12 +18,7 @@ public class SdkHubProperties {
     /**
      * SDK 安装路径
      */
-    private String sdkPath = "~/.sdkhub";
-
-    /**
-     * 缓存路径
-     */
-    private String cachePath = "~/.sdkhub/cache";
+    private String sdkPath = "~/.sdkman";
 
     /**
      * 是否自动检查更新
