@@ -1,0 +1,30 @@
+# Spring Boot 应用配置
+
+spring:
+  application:
+    name: SdkHub
+  
+server:
+  port: 8081
+  
+  # 压缩配置
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+
+# 日志配置
+logging:
+  level:
+    com.yuchang.sdkhub: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# SdkHub 自定义配置
+sdkhub:
+  # SDK 安装路径
+  sdk-path: /Volumes/Workspace/kit/sdkman
+  # 缓存路径
+  cache-path: ${user.home}/.sdkhub/cache
+  # 是否启用自动更新检查
+  auto-check-update: true
