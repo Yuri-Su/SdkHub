@@ -344,7 +344,7 @@ public class SdkmanService {
         int versionStart = StrUtil.lastIndexOfIgnoreCase(headerLine, "(");
         if (versionStart != -1) {
             version = StrUtil.trim(StrUtil.sub(headerLine, versionStart + 1, -1));
-            name = StrUtil.trim(StrUtil.sub(headerLine, 0, versionStart + 1));
+            name = StrUtil.trim(StrUtil.sub(headerLine, 0, versionStart));
         } else {
             name = headerLine;
         }

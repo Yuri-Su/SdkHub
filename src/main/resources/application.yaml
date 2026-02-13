@@ -5,7 +5,7 @@ spring:
     name: SdkHub
   
 server:
-  port: 8081
+  port: 8080
   
   # 压缩配置
   compression:
