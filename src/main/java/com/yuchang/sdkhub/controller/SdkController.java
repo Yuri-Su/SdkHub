@@ -85,25 +85,20 @@ public class SdkController {
     /**
      * 卸载指定版本的 SDK
      *
-     * @param sdkId   SDK ID
-     * @param request 包含版本号的请求体
+     * @param sdkId SDK ID
      * @return 卸载结果
      */
     @PostMapping("/{sdkId}/uninstall")
     public ResponseEntity<SdkOperationResultVO> uninstallSdk(
             @PathVariable String sdkId,
-            @RequestBody java.util.Map<String, String> request) {
-        String version = request.get("version");
-
+            @RequestBody String version) {
         boolean success = sdkmanService.uninstallSdk(sdkId, version);
-
         SdkOperationResultVO result = SdkOperationResultVO.builder()
                 .success(success)
                 .message(success ? "Uninstallation completed" : "Uninstallation failed")
                 .sdkId(sdkId)
                 .version(version)
                 .build();
-
         return ResponseEntity.ok(result);
     }
 
@@ -119,16 +114,13 @@ public class SdkController {
             @PathVariable String sdkId,
             @RequestBody java.util.Map<String, String> request) {
         String version = request.get("version");
-
         boolean success = sdkmanService.useSdk(sdkId, version);
-
         SdkOperationResultVO result = SdkOperationResultVO.builder()
                 .success(success)
                 .message(success ? "Version switched" : "Switch failed")
                 .sdkId(sdkId)
                 .version(version)
                 .build();
-
         return ResponseEntity.ok(result);
     }
 
@@ -136,15 +128,13 @@ public class SdkController {
      * 设置默认 SDK 版本
      *
      * @param sdkId   SDK ID
-     * @param request 包含版本号的请求体
+     * @param version 包含版本号的请求体
      * @return 设置结果
      */
     @PostMapping("/{sdkId}/default")
     public ResponseEntity<SdkOperationResultVO> setDefaultSdk(
             @PathVariable String sdkId,
-            @RequestBody java.util.Map<String, String> request) {
-        String version = request.get("version");
-
+            @RequestParam("version") String version) {
         boolean success = sdkmanService.setDefaultSdk(sdkId, version);
 
         SdkOperationResultVO result = SdkOperationResultVO.builder()

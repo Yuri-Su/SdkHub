@@ -20,6 +20,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -77,7 +79,6 @@ public class SdkmanService {
         List<String> command = new ArrayList<>();
         command.add("bash");
         command.add("-c");
-
         // 构建命令字符串
         StringBuilder cmdBuilder = new StringBuilder();
         cmdBuilder.append("source ").append(getSdkmanPath()).append("/bin/sdkman-init.sh && ");
@@ -85,9 +86,7 @@ public class SdkmanService {
         for (String arg : args) {
             cmdBuilder.append(" ").append(arg);
         }
-
         command.add(cmdBuilder.toString());
-
         return executeCommand(command);
     }
 
@@ -145,12 +144,10 @@ public class SdkmanService {
      */
     public boolean installSdk(String sdkId, String version) {
         log.info("Installing SDK: {} version {}", sdkId, version);
-
         if (!isSdkmanInstalled()) {
             log.error("SDKMAN not installed");
             return false;
         }
-
         CommandResultDTO result = executeSdkCommand("install", sdkId, version);
         return result.getSuccess();
     }
@@ -183,12 +180,10 @@ public class SdkmanService {
      */
     public boolean useSdk(String sdkId, String version) {
         log.info("Switching SDK: {} to version {}", sdkId, version);
-
         if (!isSdkmanInstalled()) {
             log.error("SDKMAN not installed");
             return false;
         }
-
         CommandResultDTO result = executeSdkCommand("use", sdkId, version);
         return result.getSuccess();
     }
@@ -221,16 +216,15 @@ public class SdkmanService {
         log.info("Getting installed SDKs");
 
         if (!isSdkmanInstalled()) {
-            return new ArrayList<>();
+            return List.of();
         }
 
         CommandResultDTO result = executeSdkCommand("current");
 
         if (!result.getSuccess()) {
             log.error("Failed to get installed SDKs: {}", result.getError());
-            return new ArrayList<>();
+            return List.of();
         }
-
         return parseInstalledSdks(result.getOutput());
     }
 
@@ -242,17 +236,13 @@ public class SdkmanService {
      */
     public String getCurrentVersion(String sdkId) {
         log.info("Getting current version for SDK: {}", sdkId);
-
         if (!isSdkmanInstalled()) {
             return null;
         }
-
         CommandResultDTO result = executeSdkCommand("current", sdkId);
-
         if (!result.getSuccess()) {
             return null;
         }
-
         // 解析输出获取当前版本
         String output = result.getOutput();
         // 格式: Using java version 21.0.2
@@ -275,21 +265,16 @@ public class SdkmanService {
     private CommandResultDTO executeCommand(List<String> command) {
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.redirectErrorStream(true);
-
         try {
             Process process = pb.start();
-
             // 读取输出
             String output;
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 output = reader.lines().collect(Collectors.joining("\n"));
             }
-
             // 等待进程完成
             boolean success = process.waitFor() == 0;
-
             return CommandResultDTO.builder().success(success).output(output).error("").build();
-
         } catch (IOException | InterruptedException e) {
             log.error("Command execution failed", e);
             return CommandResultDTO.builder().success(false).output("").error(e.getMessage()).build();
@@ -486,14 +471,64 @@ public class SdkmanService {
 
     /**
      * 解析已安装的 SDK 列表
+     * [1;31m Some functionality is disabled or only partially available.[0m
+     * [1;31m If this persists, please enable the offline mode:[0m
+     * [1;31m[0m
+     * [1;31m   $ sdk offline[0m
+     * [1;31m[0m
+     * [1;31m================================================================================[0m
+     * <p>
+     * <p>
+     * Using:
+     * <p>
+     * java: 21.0.5-zulu
+     * maven: 3.6.3
      *
      * @param output SDKMAN current 命令输出
      * @return 已安装的 SDK 列表
      */
     private List<InstalledSdkDTO> parseInstalledSdks(String output) {
         List<InstalledSdkDTO> sdks = new ArrayList<>();
-        // TODO: 解析 SDKMAN current 命令输出
-        // 当前返回空列表，等待实现解析逻辑
+        if (output == null || output.isEmpty()) {
+            return sdks;
+        }
+        // 正则表达式：
+        // ^\s*               -> 匹配行首空白
+        // ([\w-]+)           -> 捕获组1：SDK名称 (字母数字下划线横杠，如 java, maven)
+        // :\s*               -> 匹配冒号及后续空白
+        // (.+?)              -> 捕获组2：版本号 (非贪婪匹配)
+        // \s*$               -> 匹配行尾空白
+        Pattern pattern = Pattern.compile("^\\s*([\\w-]+):\\s*(.+?)\\s*$");
+        // 按行分割输出
+        List<String> lines = StrUtil.split(output, '\n');
+        for (String line : lines) {
+            // 1. 去除 ANSI 颜色转义字符 (如 [1;31m 等)，防止干扰正则匹配
+            String cleanLine = line.replaceAll("\u001B\\[[;\\d]*m", "").trim();
+            // 2. 跳过无效行
+            // 空行
+            if (StrUtil.isBlank(cleanLine)) {
+                continue;
+            }
+            // 警告/提示行
+            if (StrUtil.containsAny(cleanLine, "Some functionality is disabled", "If this persists", "$ sdk offline")
+                    || StrUtil.startWith(cleanLine, "==")) {
+                continue;
+            }
+            // 3. 正则匹配提取
+            Matcher matcher = pattern.matcher(cleanLine);
+            if (matcher.find()) {
+                String name = matcher.group(1);
+                String version = matcher.group(2);
+                // 注：此处 name 既是标识也是展示名，SDKMAN 输出中默认使用的即是当前版本，故设为 true
+                InstalledSdkDTO dto = InstalledSdkDTO.builder()
+                        .id(name)           // 设置 ID，通常与 name 相同
+                        .name(name)         // SDK 名称
+                        .version(version)   // 版本号
+                        .current(true)      // 既然出现在 'current' 命令输出中，默认为当前使用版本
+                        .build();
+                sdks.add(dto);
+            }
+        }
         return sdks;
     }
 }
