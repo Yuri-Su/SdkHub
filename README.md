@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript" alt="TypeScript">
   <img src="https://img.shields.io/badge/Tauri-2.0-FFC131?logo=tauri" alt="Tauri">
   <img src="https://img.shields.io/badge/Java-21-007396?logo=java" alt="Java 21">
-  <img src="https://img.shields.io/badge/Spring%20Boot-3.2-6DB33F?logo=spring" alt="Spring Boot">
+  <img src="https://img.shields.io/badge/Spring%20Boot-4.0-6DB33F?logo=spring" alt="Spring Boot">
   <img src="https://img.shields.io/badge/Element%20Plus-2.13-409EFF?logo=element" alt="Element Plus">
 </p>
 
@@ -35,7 +35,7 @@
 
 ### 后端
 - **Java 21** - 最新的 Java LTS 版本
-- **Spring Boot 3.2** - 快速开发框架
+- **Spring Boot 4.0** - 快速开发框架
 - **Lombok** - 简化 Java 代码的工具
 
 ### 桌面端
