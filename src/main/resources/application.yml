@@ -3,7 +3,10 @@
 spring:
   application:
     name: SdkHub
-  
+  threads:
+    virtual:
+      enabled: true
+
 server:
   port: 8080
   
@@ -24,7 +27,5 @@ logging:
 sdkhub:
   # SDK 安装路径
   sdk-path: /Volumes/Workspace/kit/sdkman
-  # 缓存路径
-  cache-path: ${user.home}/.sdkhub/cache
   # 是否启用自动更新检查
   auto-check-update: true
